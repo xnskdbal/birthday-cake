@@ -230,6 +230,7 @@ function resize(){
   dpr = Math.min(devicePixelRatio||1, 2);
   W = innerWidth; H = innerHeight;
   cvs.width = W*dpr; cvs.height = H*dpr;
+  cvs.style.width = W+'px'; cvs.style.height = H+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
   layout();
 }
