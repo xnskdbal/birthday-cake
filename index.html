@@ -1,0 +1,893 @@
+<title>초콜릿 서프라이즈 케이크</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+  :root{
+    --bg0:#2b1a26; --bg1:#170d14;
+    --cream:#f9ebd7; --cream-dim:#d8c3ab;
+    --pink:#f2889b; --gold:#ffc24b;
+    --choco:#6b4226; --choco-dark:#4a2a17;
+  }
+  html,body{height:100%;}
+  body{
+    margin:0; overflow:hidden; touch-action:none;
+    background:radial-gradient(120% 90% at 50% 30%, var(--bg0), var(--bg1));
+    color:var(--cream);
+    font-family:"Gowun Dodum", sans-serif;
+    -webkit-user-select:none; user-select:none;
+  }
+  #scene{position:fixed; inset:0; display:block; cursor:pointer;}
+  .ui{position:fixed; left:0; right:0; text-align:center; pointer-events:none; z-index:5;}
+  #hint{
+    top:max(4vh,24px);
+    font-family:"Jua", "Gowun Dodum", sans-serif;
+    font-size:clamp(19px,3.4vw,30px);
+    letter-spacing:.02em;
+    text-shadow:0 2px 14px rgba(0,0,0,.55);
+    opacity:0; transition:opacity .5s;
+  }
+  #hint.show{opacity:1;}
+  #sub{
+    top:calc(max(4vh,24px) + clamp(30px,5vw,46px));
+    font-size:clamp(13px,2.2vw,16px); color:var(--cream-dim);
+    opacity:0; transition:opacity .5s;
+  }
+  #sub.show{opacity:.9;}
+  button{font-family:"Jua","Gowun Dodum",sans-serif;}
+  #blowBtn{
+    position:fixed; left:50%; bottom:max(5vh,30px); transform:translateX(-50%);
+    z-index:6; padding:14px 30px 15px; border:0; border-radius:999px;
+    font-size:clamp(17px,2.8vw,22px); letter-spacing:.03em;
+    color:#3a2030; background:var(--gold);
+    box-shadow:0 6px 22px rgba(255,194,75,.35), inset 0 -3px 0 rgba(0,0,0,.18);
+    cursor:pointer; display:none; touch-action:none;
+  }
+  #blowBtn.show{display:block; animation:pop .4s ease;}
+  #blowBtn:active{transform:translateX(-50%) scale(.95);}
+  #blowBtn:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  @keyframes pop{from{transform:translateX(-50%) scale(.6); opacity:0;}}
+  /* 시작 화면 */
+  #start{
+    position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    background:radial-gradient(120% 90% at 50% 30%, var(--bg0), var(--bg1));
+    transition:opacity .6s; padding:24px;
+  }
+  #start.hide{opacity:0; pointer-events:none;}
+  #start h1{
+    font-family:"Jua","Gowun Dodum",sans-serif; font-weight:400;
+    font-size:clamp(34px,7vw,58px); margin:0; text-wrap:balance; text-align:center;
+    color:var(--cream); text-shadow:0 3px 20px rgba(242,136,155,.25);
+  }
+  #start p{margin:0; color:var(--cream-dim); font-size:clamp(14px,2.4vw,17px); text-align:center;}
+  #nameIn{
+    margin-top:6px; padding:12px 18px; width:min(280px,70vw);
+    border-radius:14px; border:2px solid rgba(249,235,215,.25);
+    background:rgba(0,0,0,.25); color:var(--cream); text-align:center;
+    font-family:"Gowun Dodum",sans-serif; font-size:17px; outline:none;
+  }
+  #nameIn:focus{border-color:var(--pink);}
+  #nameIn::placeholder{color:rgba(216,195,171,.55);}
+  #ageIn{
+    padding:10px 16px; width:min(160px,50vw);
+    border-radius:14px; border:2px solid rgba(249,235,215,.25);
+    background:rgba(0,0,0,.25); color:var(--cream); text-align:center;
+    font-family:"Gowun Dodum",sans-serif; font-size:17px; outline:none;
+  }
+  #ageIn:focus{border-color:var(--pink);}
+  #ageIn::placeholder{color:rgba(216,195,171,.55);}
+  #modes{display:flex; gap:10px;}
+  .mode{
+    padding:10px 20px 11px; border-radius:999px; cursor:pointer;
+    font-size:clamp(15px,2.4vw,18px); letter-spacing:.02em;
+    color:var(--cream-dim); background:rgba(0,0,0,.25);
+    border:2px solid rgba(249,235,215,.22);
+  }
+  .mode.sel{
+    color:#3a2030; background:var(--gold); border-color:var(--gold);
+    box-shadow:0 4px 16px rgba(255,194,75,.3);
+  }
+  .mode:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  #modeNote{font-size:clamp(12px,2vw,14px); color:rgba(216,195,171,.7); margin:0;}
+  #startBtn{
+    margin-top:8px; padding:15px 42px 16px; border:0; border-radius:999px;
+    font-size:clamp(19px,3vw,24px); letter-spacing:.04em; cursor:pointer;
+    color:#fff; background:linear-gradient(160deg,var(--pink),#d9647e);
+    box-shadow:0 8px 26px rgba(242,136,155,.35), inset 0 -3px 0 rgba(0,0,0,.15);
+  }
+  #startBtn:active{transform:scale(.96);}
+  #startBtn:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  .deco{font-size:clamp(26px,5vw,40px); letter-spacing:.35em; text-indent:.35em;}
+  /* 축하 메시지 */
+  #msg{
+    top:30%; transform:translateY(-50%); z-index:7;
+    opacity:0; transition:opacity 1s;
+  }
+  #msg.show{opacity:1;}
+  #msg .m1{
+    font-family:"Jua","Gowun Dodum",sans-serif;
+    font-size:clamp(36px,8vw,66px); color:var(--gold);
+    text-shadow:0 4px 26px rgba(255,194,75,.45);
+  }
+  #msg .m2{margin-top:10px; font-size:clamp(16px,3vw,22px); color:var(--cream);}
+  #replay{
+    position:fixed; left:50%; bottom:max(5vh,30px); transform:translateX(-50%);
+    z-index:7; display:none; padding:12px 28px 13px; border:0; border-radius:999px;
+    font-size:clamp(15px,2.4vw,19px); cursor:pointer;
+    color:var(--cream); background:rgba(249,235,215,.14);
+    border:2px solid rgba(249,235,215,.3);
+  }
+  #replay.show{display:block;}
+  #replay:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  /* 선물 링크 만들기 */
+  #makerOpen{
+    margin-top:6px; padding:10px 24px 11px; border-radius:999px; cursor:pointer;
+    border:2px solid rgba(242,136,155,.45); background:transparent; color:var(--pink);
+    font-size:clamp(14px,2.4vw,17px); letter-spacing:.02em;
+  }
+  #makerOpen:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  #maker{
+    position:fixed; inset:0; z-index:11; overflow:auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+    background:radial-gradient(120% 90% at 50% 30%, var(--bg0), var(--bg1));
+    padding:24px;
+  }
+  #maker.hidden{display:none;}
+  #maker h2{
+    font-family:"Jua","Gowun Dodum",sans-serif; font-weight:400; margin:0;
+    font-size:clamp(24px,5vw,38px); color:var(--cream);
+  }
+  #maker>p{margin:0; color:var(--cream-dim); font-size:clamp(13px,2.2vw,16px); text-align:center;}
+  .tin{
+    padding:11px 16px; width:min(300px,74vw);
+    border-radius:14px; border:2px solid rgba(249,235,215,.25);
+    background:rgba(0,0,0,.25); color:var(--cream); text-align:center;
+    font-family:"Gowun Dodum",sans-serif; font-size:16px; outline:none;
+  }
+  .tin:focus{border-color:var(--pink);}
+  .tin::placeholder{color:rgba(216,195,171,.55);}
+  #mMsg{height:66px; resize:none; text-align:center; padding-top:14px;}
+  #mAge{width:min(160px,50vw);}
+  .mrow{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .mbtn{
+    padding:12px 24px 13px; border:0; border-radius:999px; cursor:pointer;
+    font-size:clamp(15px,2.6vw,19px); letter-spacing:.02em;
+    color:#3a2030; background:var(--gold);
+    box-shadow:0 5px 18px rgba(255,194,75,.3), inset 0 -3px 0 rgba(0,0,0,.15);
+  }
+  .mbtn.alt{color:#fff; background:linear-gradient(160deg,var(--pink),#d9647e);
+    box-shadow:0 5px 18px rgba(242,136,155,.3), inset 0 -3px 0 rgba(0,0,0,.15);}
+  .mbtn.ghost{color:var(--cream-dim); background:rgba(249,235,215,.12);
+    box-shadow:none; border:2px solid rgba(249,235,215,.25);}
+  .mbtn:active{transform:scale(.96);}
+  .mbtn:focus-visible{outline:3px solid var(--cream); outline-offset:3px;}
+  #linkOut{
+    display:none; max-width:min(440px,86vw); word-break:break-all;
+    font-size:13px; color:var(--cream-dim);
+    background:rgba(0,0,0,.3); padding:10px 14px; border-radius:12px;
+    -webkit-user-select:text; user-select:text;
+  }
+  #linkOut.show{display:block;}
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
+</style>
+
+<canvas id="scene"></canvas>
+<div id="hint" class="ui"></div>
+<div id="sub" class="ui"></div>
+<div id="msg" class="ui"><div class="m1"></div><div class="m2"></div></div>
+<button id="blowBtn">🌬️ 꾹 누르고 후—</button>
+<button id="replay">한 번 더 🎂</button>
+
+<div id="start">
+  <div class="deco">🍫🎂🕯️</div>
+  <h1>초콜릿 서프라이즈</h1>
+  <p>초콜릿 껍데기를 깨면… 케이크가 짜잔!<br>마지막엔 촛불을 후— 불어 꺼주세요.</p>
+  <input id="nameIn" placeholder="주인공 이름 (선택)" maxlength="12" autocomplete="off">
+  <input id="ageIn" type="number" inputmode="numeric" min="1" max="99" placeholder="나이 (선택)" autocomplete="off">
+  <div id="modes">
+    <button class="mode sel" data-m="stick" type="button">🕯️ 일자 초</button>
+    <button class="mode" data-m="digit" type="button">🔢 숫자 초</button>
+  </div>
+  <p id="modeNote">일자 초는 나이만큼 꽂혀요 (최대 30개) · 숫자 초는 나이 숫자가 초가 돼요</p>
+  <button id="startBtn">케이크 준비하기</button>
+  <button id="makerOpen" type="button">💌 선물 링크 만들기</button>
+</div>
+
+<div id="maker" class="hidden">
+  <h2>💌 선물 링크 만들기</h2>
+  <p>링크를 받은 사람이 열면 바로 서프라이즈가 시작돼요</p>
+  <input id="mName" class="tin" placeholder="주인공 이름" maxlength="12" autocomplete="off">
+  <input id="mAge" class="tin" type="number" inputmode="numeric" min="1" max="99" placeholder="나이 (선택)" autocomplete="off">
+  <div id="mModes" class="mrow">
+    <button class="mode mmode sel" data-m="stick" type="button">🕯️ 일자 초</button>
+    <button class="mode mmode" data-m="digit" type="button">🔢 숫자 초</button>
+  </div>
+  <textarea id="mMsg" class="tin" placeholder="축하 메시지 (선택, 80자)&#10;촛불을 다 끄면 이 메시지가 나와요" maxlength="80"></textarea>
+  <input id="mFrom" class="tin" placeholder="보내는 사람 (선택)" maxlength="12" autocomplete="off">
+  <div class="mrow">
+    <button id="mPrev" class="mbtn ghost" type="button">👀 미리보기</button>
+    <button id="mCopy" class="mbtn" type="button">🔗 링크 복사</button>
+    <button id="mShare" class="mbtn alt" type="button">📤 공유하기</button>
+  </div>
+  <div id="linkOut"></div>
+  <button id="makerBack" class="mbtn ghost" type="button">← 돌아가기</button>
+</div>
+
+<script>
+(() => {
+"use strict";
+const cvs = document.getElementById('scene');
+const ctx = cvs.getContext('2d');
+const hintEl = document.getElementById('hint');
+const subEl = document.getElementById('sub');
+const msgEl = document.getElementById('msg');
+const blowBtn = document.getElementById('blowBtn');
+const replayBtn = document.getElementById('replay');
+const startEl = document.getElementById('start');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let W=0, H=0, dpr=1;
+function resize(){
+  dpr = Math.min(devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  cvs.width = W*dpr; cvs.height = H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  layout();
+}
+addEventListener('resize', resize);
+
+// ---- 장면 배치 ----
+let cx, groundY, R, cakeW;
+function layout(){
+  cx = W/2;
+  groundY = H*0.74;
+  R = Math.min(W*0.30, H*0.30, 230);
+  cakeW = R*1.7;
+}
+
+// ---- 상태 ----
+const HITS_NEEDED = 7;
+let age = 0, candleMode = 'stick';   // stick(일자 초) | digit(숫자 초)
+let phase = 'start';      // start | shell | breaking | candles | done
+let hits = 0, cracks = [], shards = [], chips = [];
+let shakeT = 0, revealT = 0;
+let candles = [], smoke = [], confetti = [];
+let wind = 0, btnHold = false, puff = 0, micOn = false, analyser = null, micBuf = null;
+let audioCtx = null, celebrated = false, celebratePending = false, name = '';
+let recvMsg = '', recvFrom = '';
+let t = 0, lastTs = 0;
+
+function setHint(main, sub){
+  hintEl.textContent = main||''; subEl.textContent = sub||'';
+  hintEl.classList.toggle('show', !!main);
+  subEl.classList.toggle('show', !!sub);
+}
+
+const HUES = ['#f2889b','#8fd8c8','#ffc24b','#9f8ce8'];
+function candleTip(c){ return c.type==='digit' ? c.y - c.h*0.80 : c.y - c.h; }
+function makeCandles(){
+  candles = [];
+  const topY = groundY - R*1.02;
+  if(candleMode==='digit' && age>0){
+    const s = String(age);
+    const dw = R*0.36;
+    for(let i=0;i<s.length;i++){
+      candles.push({type:'digit', ch:s[i],
+                    x:cx-(s.length-1)*dw/2+i*dw, y:topY, h:R*0.44,
+                    life:1, phase:Math.random()*7, hue:HUES[i%2], smoked:false});
+    }
+    return;
+  }
+  const n = age>0 ? Math.min(age,30) : 5;
+  const rows = n<=12 ? [n] : [Math.ceil(n/2), Math.floor(n/2)];
+  let idx=0;
+  rows.forEach((cnt,r)=>{
+    const y = topY + r*R*0.11;
+    const span = cakeW*(cnt<=6?0.42 : cnt<=9?0.55 : 0.64);
+    for(let i=0;i<cnt;i++){
+      const x = cnt===1 ? cx : cx - span/2 + span*(i/(cnt-1)) + (r===1? span/(cnt*2)*0.5 : 0);
+      candles.push({type:'stick', x, y,
+                    h:R*(0.26+((idx*37)%17)/17*0.10),
+                    life:1, phase:Math.random()*7, hue:HUES[idx%4], smoked:false});
+      idx++;
+    }
+  });
+}
+
+function reset(){
+  phase='shell'; hits=0; cracks=[]; shards=[]; chips=[]; smoke=[]; confetti=[];
+  shakeT=0; revealT=0; wind=0; puff=0; btnHold=false; celebrated=false; celebratePending=false;
+  makeCandles();
+  msgEl.classList.remove('show'); replayBtn.classList.remove('show');
+  blowBtn.classList.remove('show');
+  setHint('초콜릿 돔을 톡톡 두드려 보세요! 🍫', `${HITS_NEEDED}번 두드리면 깨져요`);
+}
+
+// ---- 사운드 ----
+function ac(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function knock(strong){
+  try{
+    const a=ac(), t0=a.currentTime;
+    const o=a.createOscillator(), g=a.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(strong?150:210,t0);
+    o.frequency.exponentialRampToValueAtTime(60,t0+0.09);
+    g.gain.setValueAtTime(strong?0.5:0.3,t0);
+    g.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
+    o.connect(g).connect(a.destination); o.start(t0); o.stop(t0+0.13);
+    // 바삭 소리
+    const n=a.createBufferSource(), buf=a.createBuffer(1,a.sampleRate*0.06,a.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    n.buffer=buf;
+    const ng=a.createGain(); ng.gain.value=strong?0.35:0.15;
+    const f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=1800;
+    n.connect(f).connect(ng).connect(a.destination); n.start(t0);
+  }catch(e){}
+}
+function playMelody(){
+  try{
+    const a=ac(); const f=n=>440*Math.pow(2,(n-69)/12);
+    // 생일 축하 멜로디 (G장조)
+    const seq=[[62,.35],[62,.2],[64,.55],[62,.55],[67,.55],[66,1],
+               [62,.35],[62,.2],[64,.55],[62,.55],[69,.55],[67,1],
+               [62,.35],[62,.2],[74,.55],[71,.55],[67,.55],[66,.55],[64,.9],
+               [72,.35],[72,.2],[71,.55],[67,.55],[69,.55],[67,1.2]];
+    let t0=a.currentTime+0.25;
+    for(const [n,d] of seq){
+      const o=a.createOscillator(), g=a.createGain();
+      o.type='triangle'; o.frequency.value=f(n);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.22,t0+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+d*0.92);
+      o.connect(g).connect(a.destination); o.start(t0); o.stop(t0+d);
+      t0+=d;
+    }
+  }catch(e){}
+}
+
+// ---- 마이크 ----
+async function initMic(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const a = ac();
+    const src = a.createMediaStreamSource(stream);
+    analyser = a.createAnalyser(); analyser.fftSize=1024;
+    micBuf = new Float32Array(analyser.fftSize);
+    src.connect(analyser);
+    micOn = true;
+  }catch(e){ micOn = false; }
+}
+function micLevel(){
+  if(!micOn||!analyser) return 0;
+  analyser.getFloatTimeDomainData(micBuf);
+  let s=0; for(let i=0;i<micBuf.length;i++) s+=micBuf[i]*micBuf[i];
+  const rms = Math.sqrt(s/micBuf.length);
+  return Math.min(1, Math.max(0,(rms-0.035)/0.10));
+}
+
+// ---- 입력 ----
+cvs.addEventListener('pointerdown', e=>{
+  if(phase!=='shell') return;
+  const px=e.clientX, py=e.clientY;
+  const dx=px-cx, dy=py-groundY;
+  if(dy>10 || Math.hypot(dx, dy)>R*1.25) return; // 돔 근처만
+  hits++; shakeT=1;
+  knock(hits>=HITS_NEEDED);
+  addCrack(px, Math.min(py, groundY-6));
+  for(let i=0;i<6;i++) chips.push(chip(px,py));
+  if(navigator.vibrate) navigator.vibrate(20);
+  if(hits>=HITS_NEEDED) shatter();
+  else setHint('초콜릿 돔을 톡톡 두드려 보세요! 🍫', `앞으로 ${HITS_NEEDED-hits}번!`);
+});
+
+function chip(x,y){
+  const a=Math.random()*Math.PI*2, v=2+Math.random()*3;
+  return {x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-3,s:2+Math.random()*4,
+          rot:Math.random()*7,vr:(Math.random()-.5)*.4,life:1};
+}
+function addCrack(x,y){
+  const branches = 3+Math.floor(Math.random()*3);
+  for(let b=0;b<branches;b++){
+    const pts=[[x,y]];
+    let ang=Math.random()*Math.PI*2, len=R*(0.18+Math.random()*0.3);
+    let px=x, py=y;
+    const segs=3+Math.floor(Math.random()*3);
+    for(let s=0;s<segs;s++){
+      ang += (Math.random()-.5)*1.1;
+      px += Math.cos(ang)*len/segs; py += Math.sin(ang)*len/segs;
+      // 돔 안쪽으로 제한
+      const dx=px-cx, dy=py-groundY, d=Math.hypot(dx,dy);
+      if(d>R*0.98){ px=cx+dx/d*R*0.98; py=groundY+dy/d*R*0.98; }
+      if(py>groundY-4) py=groundY-4;
+      pts.push([px,py]);
+    }
+    cracks.push({pts, w:1.5+Math.random()*1.8});
+  }
+}
+
+function shatter(){
+  phase='breaking'; revealT=0;
+  setHint('와장창! 🎉','');
+  // 돔을 조각으로
+  const N=26;
+  for(let i=0;i<N;i++){
+    const ang=Math.random()*Math.PI;           // 반원 위쪽
+    const rr=R*(0.35+Math.random()*0.62);
+    const sx=cx+Math.cos(-ang)*rr*(Math.random()<.5?1:-1)*0.9;
+    const sy=groundY-Math.abs(Math.sin(ang))*rr;
+    const verts=[]; const vn=3+Math.floor(Math.random()*3);
+    const size=R*(0.14+Math.random()*0.16);
+    for(let v=0;v<vn;v++){
+      const va=v/vn*Math.PI*2+Math.random()*.5;
+      verts.push([Math.cos(va)*size*(.6+Math.random()*.5), Math.sin(va)*size*(.6+Math.random()*.5)]);
+    }
+    const dir=Math.atan2(sy-(groundY-R*0.4), sx-cx);
+    const sp=4+Math.random()*7;
+    shards.push({x:sx,y:sy,vx:Math.cos(dir)*sp,vy:Math.sin(dir)*sp-5-Math.random()*3,
+                 rot:Math.random()*7,vr:(Math.random()-.5)*.5,verts,life:1,
+                 shade:Math.random()});
+  }
+  knock(true);
+  setTimeout(()=>{
+    if(phase!=='breaking') return;
+    phase='candles';
+    blowBtn.classList.add('show');
+    setHint('이제 촛불을 후— 불어 꺼주세요! 🕯️',
+            micOn ? '마이크에 대고 세게 불거나, 아래 버튼을 꾹!' : '아래 버튼을 꾹 누르면 바람이 불어요');
+  }, 1400);
+}
+
+// 불기 버튼: 한 번 누르면 1초짜리 입김, 누르고 있으면 계속
+const holdOn = e=>{e.preventDefault(); btnHold=true; puff=1.0;};
+const holdOff = ()=>{btnHold=false;};
+blowBtn.addEventListener('pointerdown', holdOn);
+addEventListener('pointerup', holdOff);
+addEventListener('pointercancel', holdOff);
+blowBtn.addEventListener('keydown', e=>{if(e.key===' '||e.key==='Enter'){btnHold=true; puff=1.0;}});
+blowBtn.addEventListener('keyup', ()=>btnHold=false);
+
+replayBtn.addEventListener('click', ()=>{
+  phase='start';
+  msgEl.classList.remove('show'); replayBtn.classList.remove('show');
+  setHint('','');
+  startEl.classList.remove('hide');
+});
+
+document.querySelectorAll('#modes .mode').forEach(b=>b.addEventListener('click', ()=>{
+  candleMode = b.dataset.m;
+  document.querySelectorAll('#modes .mode').forEach(x=>x.classList.toggle('sel', x===b));
+}));
+
+document.getElementById('startBtn').addEventListener('click', async ()=>{
+  name = document.getElementById('nameIn').value.trim();
+  age = Math.max(0, Math.min(99, parseInt(document.getElementById('ageIn').value,10)||0));
+  ac();
+  await initMic();
+  startEl.classList.add('hide');
+  reset();
+});
+
+// ---- 그리기 ----
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+function drawTable(){
+  // 바닥 그림자 + 테이블 라인
+  const g=ctx.createLinearGradient(0,groundY,0,H);
+  g.addColorStop(0,'rgba(255,220,190,0.06)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,groundY,W,H-groundY);
+  // 접시
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(cx,groundY+14,R*1.35,R*0.22,0,0,7); ctx.fill();
+  const pg=ctx.createLinearGradient(cx-R*1.3,0,cx+R*1.3,0);
+  pg.addColorStop(0,'#cbb8ad'); pg.addColorStop(.5,'#f4e9e0'); pg.addColorStop(1,'#c2afa4');
+  ctx.fillStyle=pg;
+  ctx.beginPath(); ctx.ellipse(cx,groundY+6,R*1.32,R*0.20,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(120,90,80,0.25)';
+  ctx.beginPath(); ctx.ellipse(cx,groundY+4,R*1.12,R*0.15,0,0,7); ctx.fill();
+  ctx.restore();
+}
+
+function chocoFill(x0,y0,x1,y1){
+  const g=ctx.createLinearGradient(x0,y0,x1,y1);
+  g.addColorStop(0,'#8a5a33'); g.addColorStop(.45,'#6b4226'); g.addColorStop(1,'#3c2212');
+  return g;
+}
+
+function drawShell(){
+  const sh = shakeT>0 ? Math.sin(t*70)*shakeT*6 : 0;
+  ctx.save();
+  ctx.translate(sh,0);
+  // 돔
+  ctx.beginPath();
+  ctx.moveTo(cx-R,groundY);
+  ctx.arc(cx,groundY,R,Math.PI,0);
+  ctx.closePath();
+  ctx.fillStyle=chocoFill(cx-R,groundY-R,cx+R,groundY);
+  ctx.fill();
+  // 광택
+  ctx.beginPath();
+  ctx.ellipse(cx-R*0.35,groundY-R*0.62,R*0.28,R*0.14,-0.5,0,7);
+  ctx.fillStyle='rgba(255,230,200,0.18)'; ctx.fill();
+  // 물결 무늬 (초콜릿 드리즐)
+  ctx.strokeStyle='rgba(58,32,16,0.5)'; ctx.lineWidth=3; ctx.lineCap='round';
+  for(let i=1;i<=3;i++){
+    ctx.beginPath();
+    const ry=R*(i/3.6);
+    for(let a=0;a<=Math.PI;a+=0.1){
+      const px2=cx-Math.cos(a)*Math.sqrt(Math.max(R*R-ry*ry,0));
+      const py2=groundY-ry+Math.sin(a*5+i)*3;
+      if(a===0) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+    }
+    ctx.stroke();
+  }
+  // 금
+  ctx.strokeStyle='rgba(24,12,6,0.9)'; ctx.lineCap='round';
+  for(const c of cracks){
+    ctx.lineWidth=c.w;
+    ctx.beginPath();
+    c.pts.forEach((p,i)=> i?ctx.lineTo(p[0]+sh*0,p[1]):ctx.moveTo(p[0],p[1]));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCake(alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  const w1=cakeW, h1=R*0.52;         // 아래층
+  const w2=cakeW*0.68, h2=R*0.42;    // 위층
+  const y1=groundY-h1, y2=y1-h2;
+  // 아래층
+  const g1=ctx.createLinearGradient(cx-w1/2,0,cx+w1/2,0);
+  g1.addColorStop(0,'#e3cdb2'); g1.addColorStop(.5,'#f9ebd7'); g1.addColorStop(1,'#dfc7ab');
+  ctx.fillStyle=g1; roundRect(cx-w1/2,y1,w1,h1,10); ctx.fill();
+  // 딸기 필링 줄
+  ctx.fillStyle='#e8798f';
+  ctx.fillRect(cx-w1/2+4,y1+h1*0.48,w1-8,h1*0.13);
+  // 위층
+  const g2=ctx.createLinearGradient(cx-w2/2,0,cx+w2/2,0);
+  g2.addColorStop(0,'#e3cdb2'); g2.addColorStop(.5,'#f9ebd7'); g2.addColorStop(1,'#dfc7ab');
+  ctx.fillStyle=g2; roundRect(cx-w2/2,y2,w2,h2,9); ctx.fill();
+  // 초코 드립 (위층 위에서 흘러내림)
+  ctx.fillStyle='#5a3520';
+  ctx.beginPath();
+  ctx.moveTo(cx-w2/2,y2);
+  for(let i=0;i<=10;i++){
+    const x=cx-w2/2+w2*i/10;
+    const drop=(i%2? R*0.10 : R*0.055)+Math.sin(i*2.7)*R*0.015;
+    ctx.lineTo(x,y2);
+    if(i<10){
+      const nx=cx-w2/2+w2*(i+1)/10;
+      ctx.bezierCurveTo(x+(nx-x)*0.2,y2+drop, x+(nx-x)*0.8,y2+drop, nx,y2);
+    }
+  }
+  ctx.lineTo(cx+w2/2,y2+7); ctx.lineTo(cx-w2/2,y2+7); ctx.closePath(); ctx.fill();
+  ctx.fillRect(cx-w2/2,y2-3,w2,8);
+  // 아래층 드립
+  ctx.fillStyle='#63472b';
+  ctx.beginPath();
+  ctx.moveTo(cx-w1/2,y1);
+  for(let i=0;i<=12;i++){
+    const x=cx-w1/2+w1*i/12;
+    const drop=(i%2? R*0.08 : R*0.04)+Math.cos(i*1.9)*R*0.012;
+    ctx.lineTo(x,y1);
+    if(i<12){
+      const nx=cx-w1/2+w1*(i+1)/12;
+      ctx.bezierCurveTo(x+(nx-x)*0.2,y1+drop, x+(nx-x)*0.8,y1+drop, nx,y1);
+    }
+  }
+  ctx.lineTo(cx+w1/2,y1+6); ctx.lineTo(cx-w1/2,y1+6); ctx.closePath(); ctx.fill();
+  // 딸기 장식
+  for(let i=0;i<4;i++){
+    const sx=cx-w1/2+w1*(0.14+i*0.24);
+    strawberry(sx, y1-6, R*0.075);
+  }
+  ctx.restore();
+}
+function strawberry(x,y,s){
+  ctx.save(); ctx.translate(x,y);
+  const g=ctx.createRadialGradient(-s*0.3,-s*0.4,s*0.1,0,0,s*1.2);
+  g.addColorStop(0,'#ff8ba0'); g.addColorStop(1,'#d5405e');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(0,s);
+  ctx.bezierCurveTo(-s*1.15,s*0.2,-s*0.8,-s,0,-s*0.85);
+  ctx.bezierCurveTo(s*0.8,-s,s*1.15,s*0.2,0,s);
+  ctx.fill();
+  ctx.fillStyle='#4f9c58';
+  ctx.beginPath(); ctx.ellipse(0,-s*0.82,s*0.42,s*0.2,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(255,240,230,0.75)';
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.arc((Math.sin(i*2.4))*s*0.5,(Math.cos(i*1.7))*s*0.4+s*0.1,s*0.06,0,7);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCandles(alpha){
+  ctx.save(); ctx.globalAlpha=alpha;
+  const many = candles.length;
+  for(const c of candles){
+    if(c.type==='digit'){
+      // 숫자 모양 초
+      ctx.save();
+      ctx.font = `${Math.round(c.h)}px Jua, "Gowun Dodum", sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+      ctx.lineJoin='round';
+      ctx.strokeStyle='rgba(24,12,6,0.55)'; ctx.lineWidth=7;
+      ctx.strokeText(c.ch, c.x, c.y-4);
+      const dg=ctx.createLinearGradient(0,c.y-c.h,0,c.y);
+      dg.addColorStop(0,'#fdf6ec'); dg.addColorStop(0.5,c.hue); dg.addColorStop(1,c.hue);
+      ctx.fillStyle=dg;
+      ctx.fillText(c.ch, c.x, c.y-4);
+      ctx.restore();
+      // 심지
+      ctx.strokeStyle='#3a2a20'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(c.x,candleTip(c)); ctx.lineTo(c.x,candleTip(c)-7); ctx.stroke();
+    } else {
+      const cw=Math.max(4, R*0.045*Math.min(1, 9/Math.max(1,many*0.55)));
+      // 몸통 (줄무늬)
+      ctx.fillStyle='#fdf6ec';
+      roundRect(c.x-cw/2,c.y-c.h,cw,c.h,cw/2); ctx.fill();
+      ctx.save();
+      roundRect(c.x-cw/2,c.y-c.h,cw,c.h,cw/2); ctx.clip();
+      ctx.strokeStyle=c.hue; ctx.lineWidth=cw*0.55;
+      for(let s=0;s<6;s++){
+        ctx.beginPath();
+        ctx.moveTo(c.x-cw,c.y-c.h+s*c.h/4-4);
+        ctx.lineTo(c.x+cw,c.y-c.h+s*c.h/4-4-cw);
+        ctx.stroke();
+      }
+      ctx.restore();
+      // 심지
+      ctx.strokeStyle='#3a2a20'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(c.x,c.y-c.h); ctx.lineTo(c.x,c.y-c.h-6); ctx.stroke();
+    }
+    // 불꽃
+    if(c.life>0){
+      const scale = c.type==='digit' ? 1.15 : (many>12 ? 0.75 : 1);
+      const fx=c.x+Math.sin(t*9+c.phase)*1.6+wind*10*(0.6+Math.sin(t*13+c.phase)*0.4);
+      const fy=candleTip(c)-7;
+      const fs=(R*0.085)*scale*(0.65+0.35*c.life)*(1+Math.sin(t*11+c.phase)*0.08);
+      // 광원
+      const glow=ctx.createRadialGradient(fx,fy,0,fx,fy,fs*6);
+      glow.addColorStop(0,`rgba(255,194,75,${0.30*c.life})`);
+      glow.addColorStop(1,'rgba(255,194,75,0)');
+      ctx.fillStyle=glow;
+      ctx.beginPath(); ctx.arc(fx,fy,fs*6,0,7); ctx.fill();
+      // 불꽃 형태
+      const lean = wind*0.9;
+      ctx.save();
+      ctx.translate(fx,fy); ctx.rotate(lean*(0.35+Math.sin(t*10+c.phase)*0.15));
+      const fg=ctx.createLinearGradient(0,fs,0,-fs*1.6);
+      fg.addColorStop(0,'#ff8a3c'); fg.addColorStop(.55,'#ffc24b'); fg.addColorStop(1,'#fff3d0');
+      ctx.fillStyle=fg;
+      ctx.beginPath();
+      ctx.moveTo(0,fs*0.8);
+      ctx.bezierCurveTo(-fs*0.9,fs*0.2,-fs*0.5,-fs*1.1,0,-fs*1.5);
+      ctx.bezierCurveTo(fs*0.5,-fs*1.1,fs*0.9,fs*0.2,0,fs*0.8);
+      ctx.fill();
+      ctx.fillStyle='rgba(90,140,255,0.5)';
+      ctx.beginPath(); ctx.ellipse(0,fs*0.45,fs*0.28,fs*0.4,0,0,7); ctx.fill();
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+function drawParticles(dt){
+  // 초콜릿 부스러기
+  for(let i=chips.length-1;i>=0;i--){
+    const p=chips[i];
+    p.vy+=22*dt; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life-=dt*1.2;
+    if(p.life<=0){chips.splice(i,1);continue;}
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.globalAlpha=Math.max(0,p.life);
+    ctx.fillStyle='#4a2a17';
+    ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);
+    ctx.restore();
+  }
+  // 껍데기 조각
+  for(let i=shards.length-1;i>=0;i--){
+    const s=shards[i];
+    s.vy+=30*dt; s.x+=s.vx; s.y+=s.vy; s.rot+=s.vr;
+    if(s.y>H+80){shards.splice(i,1);continue;}
+    ctx.save(); ctx.translate(s.x,s.y); ctx.rotate(s.rot);
+    ctx.fillStyle = s.shade>0.5 ? '#6b4226' : '#4a2a17';
+    ctx.strokeStyle='#8a5a33'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    s.verts.forEach((v,j)=> j?ctx.lineTo(v[0],v[1]):ctx.moveTo(v[0],v[1]));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  // 연기
+  for(let i=smoke.length-1;i>=0;i--){
+    const p=smoke[i];
+    p.y-=(18+p.r)*dt*3; p.x+=Math.sin(t*3+p.ph)*0.5; p.r+=dt*10; p.life-=dt*0.55;
+    if(p.life<=0){smoke.splice(i,1);continue;}
+    ctx.fillStyle=`rgba(200,200,210,${p.life*0.30})`;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+  }
+  // 폭죽
+  for(let i=confetti.length-1;i>=0;i--){
+    const p=confetti[i];
+    p.vy+=9*dt; p.vx*=0.995; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+    if(p.y>H+30){confetti.splice(i,1);continue;}
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle=p.col;
+    ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+    ctx.restore();
+  }
+}
+
+function burstConfetti(){
+  const cols=['#f2889b','#7ed3c0','#ffc24b','#9f8ce8','#f9ebd7','#ff8a3c'];
+  for(let i=0;i<170;i++){
+    const a=-Math.PI/2+(Math.random()-.5)*2.2;
+    const v=6+Math.random()*10;
+    confetti.push({
+      x:cx+(Math.random()-.5)*R, y:groundY-R*1.1,
+      vx:Math.cos(a)*v, vy:Math.sin(a)*v,
+      s:6+Math.random()*8, rot:Math.random()*7, vr:(Math.random()-.5)*.4,
+      col:cols[i%cols.length]
+    });
+  }
+}
+
+function celebrate(){
+  if(celebrated || phase!=='candles') return;
+  celebrated=true;
+  phase='done';
+  blowBtn.classList.remove('show');
+  setHint('','');
+  burstConfetti();
+  setTimeout(burstConfetti, 900);
+  playMelody();
+  const nth = age>0 ? `${age}번째 ` : '';
+  msgEl.querySelector('.m1').textContent =
+    name ? `${name}님, ${nth}생일 축하해요!` : `${nth}생일 축하합니다!`;
+  msgEl.querySelector('.m2').textContent = recvMsg
+    ? `“${recvMsg}”` + (recvFrom ? ` — ${recvFrom}` : '')
+    : '오늘 하루, 케이크처럼 달콤하길 🎂✨';
+  msgEl.classList.add('show');
+  setTimeout(()=>replayBtn.classList.add('show'), 1800);
+}
+
+// ---- 루프 ----
+function frame(ts){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(ts-lastTs)/1000||0.016); lastTs=ts; t+=dt;
+  ctx.clearRect(0,0,W,H);
+  if(phase==='start'){ return; }
+
+  // 바람 값 (버튼 퍼프 + 마이크)
+  if(btnHold) puff=1.0; else puff=Math.max(0,puff-dt);
+  let target = puff>0?1:0;
+  if(micOn && (phase==='candles')) target=Math.max(target, micLevel());
+  wind += (target-wind)*(target>wind?0.35:0.10);
+
+  shakeT=Math.max(0,shakeT-dt*4);
+
+  drawTable();
+
+  if(phase==='breaking'||phase==='candles'||phase==='done'){
+    revealT=Math.min(1,revealT+dt*1.6);
+    drawCake(revealT);
+    drawCandles(revealT);
+  }
+  if(phase==='shell') drawShell();
+
+  // 촛불 끄기 판정
+  if(phase==='candles'){
+    if(wind>0.25){
+      for(const c of candles){
+        if(c.life>0){
+          c.life -= dt*wind*(1.1+Math.sin(c.phase)*0.25);
+          if(c.life<=0 && !c.smoked){
+            c.smoked=true;
+            for(let i=0;i<7;i++)
+              smoke.push({x:c.x+(Math.random()-.5)*6, y:candleTip(c)-8,
+                          r:2+Math.random()*3, ph:Math.random()*7, life:1});
+          }
+        }
+      }
+    }
+    const lit=candles.filter(c=>c.life>0).length;
+    if(lit===0){
+      if(!celebratePending){ celebratePending=true; setTimeout(celebrate, 500); }
+    }
+    else if(lit<candles.length) setHint('후우우— 조금만 더! 🌬️', `남은 촛불 ${lit}개`);
+  }
+
+  drawParticles(dt);
+}
+// ---- 선물 링크 만들기 ----
+const $id = s => document.getElementById(s);
+let mMode = 'stick';
+document.querySelectorAll('.mmode').forEach(b=>b.addEventListener('click', ()=>{
+  mMode = b.dataset.m;
+  document.querySelectorAll('.mmode').forEach(x=>x.classList.toggle('sel', x===b));
+}));
+$id('makerOpen').addEventListener('click', ()=>$id('maker').classList.remove('hidden'));
+$id('makerBack').addEventListener('click', ()=>$id('maker').classList.add('hidden'));
+
+function buildLink(){
+  const p = new URLSearchParams();
+  const n=$id('mName').value.trim(), a=$id('mAge').value.trim(),
+        tx=$id('mMsg').value.trim(), f=$id('mFrom').value.trim();
+  if(n) p.set('n',n);
+  if(a) p.set('a',a);
+  if(mMode==='digit') p.set('m','digit');
+  if(tx) p.set('t',tx);
+  if(f) p.set('f',f);
+  const ok = location.protocol==='http:' || location.protocol==='https:' || location.protocol==='file:';
+  const base = ok ? location.href.split(/[?#]/)[0] : 'https://배포주소/cake.html';
+  return base + (p.toString()? '#'+p.toString() : '');
+}
+$id('mCopy').addEventListener('click', async ()=>{
+  const link = buildLink();
+  const out = $id('linkOut');
+  out.textContent = link; out.classList.add('show');
+  try{
+    await navigator.clipboard.writeText(link);
+    $id('mCopy').textContent = '복사됐어요! ✅';
+  }catch(e){
+    $id('mCopy').textContent = '아래 링크를 직접 복사하세요 👇';
+  }
+  setTimeout(()=>{ $id('mCopy').textContent='🔗 링크 복사'; }, 2200);
+});
+$id('mShare').addEventListener('click', async ()=>{
+  const link = buildLink();
+  const n = $id('mName').value.trim();
+  if(navigator.share){
+    try{ await navigator.share({
+      title:'초콜릿 서프라이즈',
+      text:(n? n+'님을 위한 ' : '')+'생일 서프라이즈가 도착했어요! 🎂 초콜릿을 깨보세요!',
+      url:link}); }catch(e){}
+  } else {
+    $id('mCopy').click();
+  }
+});
+$id('mPrev').addEventListener('click', ()=>{
+  name = $id('mName').value.trim();
+  age = Math.max(0, Math.min(99, parseInt($id('mAge').value,10)||0));
+  candleMode = mMode;
+  recvMsg = $id('mMsg').value.trim();
+  recvFrom = $id('mFrom').value.trim();
+  $id('maker').classList.add('hidden');
+  ac();
+  startEl.classList.add('hide');
+  reset();
+});
+
+// ---- 선물 링크로 들어온 경우 ----
+(function(){
+  const raw = location.hash.slice(1) || location.search.slice(1);
+  if(!raw) return;
+  let p; try{ p = new URLSearchParams(raw); }catch(e){ return; }
+  const n=p.get('n')||'', a=p.get('a')||'';
+  recvMsg = (p.get('t')||'').slice(0,80);
+  recvFrom = (p.get('f')||'').slice(0,12);
+  if(!(n||a||recvMsg||recvFrom)) return;
+  if(n) $id('nameIn').value = n.slice(0,12);
+  if(a) $id('ageIn').value = a;
+  if(p.get('m')==='digit'){
+    candleMode = 'digit';
+    document.querySelectorAll('#modes .mode').forEach(x=>x.classList.toggle('sel', x.dataset.m==='digit'));
+  }
+  const intro = document.querySelector('#start p');
+  intro.textContent = (recvFrom ? recvFrom+'님이 보낸 ' : '') + '생일 서프라이즈가 도착했어요!';
+  document.getElementById('startBtn').textContent = '선물 열기 🎁';
+  document.getElementById('makerOpen').textContent = '💌 나도 선물 링크 만들기';
+})();
+
+window.__dbg = () => ({phase, candleMode, age, wind, puff, btnHold, micOn, recvMsg, recvFrom, lives:candles.map(c=>+c.life.toFixed(2))});
+resize();
+requestAnimationFrame(frame);
+})();
+</script>
